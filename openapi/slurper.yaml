@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: VATSIM Slurper API
+  version: 1.0.0
+  termsOfService: https://vatsim.net/docs/policy/user-agreement
+  contact:
+    email: tech@vatsim.net
+    name: VATSIM Technology Team
+servers:
+  - url: https://slurper.vatsim.net
+paths:
+  /users/info:
+    get:
+      tags:
+        - Users
+      summary: Get user connections
+      description: |-
+        Returns the current connections for the specified user.
+
+        The response is a CSV file with the following fields:
+          * VATSIM ID
+          * Callsign
+          * Facility type (`pilot` or `atc`)
+          * Frequency (empty for pilots)
+          * Visual range (empty for pilots)
+          * Latitude
+          * Longitude
+          * Secondary positions  
+            (four or more lat/lon pairs, if set by the controller)
+          * Trailing comma
+      operationId: getUserInfo
+      parameters:
+        - name: cid
+          in: query
+          description: VATSIM ID of the user
+          required: true
+          schema:
+            type: integer
+          example: 1234567
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: CSV of the specified user's connections
+                example: 1234567,DAL1,pilot,,,40.64222,-73.76981,0,0,0,0,0,0,0,0,

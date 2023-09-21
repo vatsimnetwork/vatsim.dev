@@ -1,0 +1,436 @@
+openapi: 3.0.3
+info:
+  title: VATSIM Connect API
+  version: 1.0.0
+  termsOfService: https://vatsim.net/docs/policy/user-agreement
+  contact:
+    email: tech@vatsim.net
+    name: VATSIM Technology Team
+servers:
+  - url: https://auth.vatsim.net
+    description: Production
+  - url: https://auth-dev.vatsim.net
+    description: Sandbox
+paths:
+  /oauth/authorize:
+    get:
+      tags:
+        - OAuth2
+      summary: Begin OAuth2 flow
+      description: Redirects the end user to the authorization page
+      operationId: redirect
+      parameters:
+        - name: response_type
+          in: query
+          description: Which authorization flow to use
+          required: true
+          schema:
+            type: string
+            enum:
+              - code
+            example: code
+        - name: client_id
+          in: query
+          description: Client ID
+          required: true
+          schema:
+            type: string
+            example: 123
+        - name: redirect_uri
+          in: query
+          description: Redirect URI (must match the one configured for the client)
+          schema:
+            type: string
+            example: https://example.com/auth/callback
+        - name: scope
+          in: query
+          description: Space-separated list of requested scopes
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - full_name
+                - email
+                - vatsim_details
+                - country
+            example: [full_name, email, vatsim_details, country]
+          style: spaceDelimited
+        - name: state
+          in: query
+          description: Value used to maintain state between the request and the callback
+          schema:
+            type: string
+            example: F99a2qyUKz2JihHMewkLvAHExYhvhOfxsRjx0FY9
+        - name: prompt
+          in: query
+          description: |-
+            How to prompt the user for reauthentication and/or consent
+
+            By default, the authorization server will not prompt the user for
+            reauthentication and will not prompt for consent if they have
+            already given it.
+
+            `none` will cause the request to return an error if the user is not
+            already logged in and has not given consent to the requested scopes.
+
+            `login` will force the user to reauthenticate even if they are
+            already signed in.
+
+            `consent` will cause the authorization server to prompt the user to
+            consent to the requested scopes even if they have already done so.
+          schema:
+            type: string
+            enum:
+              - none
+              - login
+              - consent
+      responses:
+        '302':
+          description: Redirect to authorization page
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthError'
+        '401':
+          description: Invalid client ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthError'
+              example: |-
+                {
+                  "error": "invalid_client",
+                  "error_description": "Client authentication failed",
+                  "message": "Client authentication failed"
+                }
+  /oauth/token:
+    post:
+      tags:
+        - OAuth2
+      summary: Request an access token
+      description: Returns an access token for the end user
+      operationId: getToken
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                  description: |-
+                    Which grant type to use
+
+                    `authorization_code` and `refresh_token` are used by most clients
+
+                    `password` is only available with prior approval from VATSIM
+                  enum:
+                    - authorization_code
+                    - password
+                    - refresh_token
+                  example: authorization_code
+                client_id:
+                  type: string
+                  description: Client ID
+                  example: 123
+                client_secret:
+                  type: string
+                  format: password
+                  description: Client secret
+                  example: S2A3O0LcsJvpZnefGYsOV7HpHpLv74nSKhHCltes
+                redirect_uri:
+                  type: string
+                  description: Redirect URI (must match the one provided in the authorization request)
+                  example: https://example.com/auth/callback
+                code:
+                  type: string
+                  description: |-
+                    Authorization code returned in the callback from the server
+
+                    Required when using the `authorization_code` grant
+                scope:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - full_name
+                      - email
+                      - vatsim_details
+                      - country
+                  description: |-
+                    Requested scopes
+
+                    Required when using the `password` grant  
+                    Optional when using the `refresh_token` grant
+                  example: [full_name, email, vatsim_details, country]
+                username:
+                  type: string
+                  description: |-
+                    VATSIM ID of the user to authenticate
+
+                    Required when using the `password` grant
+                  example: '1234567'
+                password:
+                  type: string
+                  format: password
+                  description: |-
+                    Password of the user to authenticate
+
+                    Required when using the `password` grant
+                  example: K3nn3dy5teve!
+                refresh_token:
+                  type: string
+                  description: |-
+                    Refresh token issued in the original access token request
+
+                    Required when using the `refresh_token` grant
+              required:
+                - grant_type
+                - client_id
+                - client_secret
+            encoding:
+              scope:
+                style: spaceDelimited
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthError'
+  /api/user:
+    get:
+      tags:
+        - User
+      summary: Get user details
+      description: Returns details about the authenticated user
+      operationId: getUser
+      security:
+        - connect: [full_name, email, vatsim_details, country]
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '500':
+          description: Invalid client
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError'
+components:
+  securitySchemes:
+    connect:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /oauth/authorize
+          tokenUrl: /oauth/token
+          scopes:
+            full_name: Read the user's full name
+            email: Read the user's email address
+            vatsim_details: Read the user's VATSIM ratings and divisions
+            country: Read the user's country of residence
+  schemas:
+    Token:
+      type: object
+      properties:
+        token_type:
+          type: string
+          description: Token type
+          enum:
+            - Bearer
+          example: Bearer
+        expires_in:
+          type: integer
+          description: Access token lifetime (secs)
+          example: 604800
+        access_token:
+          type: string
+          description: Access token (validity specified in `expires_in`)
+        refresh_token:
+          type: string
+          description: Refresh token (valid for 30 days)
+        scopes:
+          type: array
+          items:
+            type: string
+            enum:
+              - full_name
+              - email
+              - vatsim_details
+              - country
+          description: Granted scopes
+          example: [full_name, email, vatsim_details, country]
+    OAuthError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          enum:
+            - invalid_request
+            - invalid_client
+            - invalid_grant
+            - unauthorized_client
+            - unsupported_grant_type
+        error_description:
+          type: string
+          description: Human-readable text providing additional information
+        message:
+          type: string
+          description: Human-readable text providing additional information
+          deprecated: true
+        hint:
+          type: string
+          description: Troubleshooting hint for the client developer
+    APIError:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: Error code
+          enum:
+            - VSO1
+            - VSO2
+            - VSO3
+        log_code:
+          type: string
+          description: Reference ID for VATSIM staff
+          example: SSO7cQDRG
+        error:
+          type: string
+          description: Human-readable error message
+    User:
+      type: object
+      properties:
+        cid:
+          type: string
+          description: VATSIM ID
+          example: '1234567'
+        personal:
+          type: object
+          description: Personal details
+          properties:
+            name_first:
+              type: string
+              description: First name
+              example: Kennedy
+            name_last:
+              type: string
+              description: Last name
+              example: Steve
+            name_full:
+              type: string
+              description: Full name
+              example: Kennedy Steve
+            email:
+              type: string
+              description: Email address
+              example: k.steve@vatsim.net
+            country:
+              type: object
+              description: Country of residence
+              properties:
+                id:
+                  type: string
+                  description: Country code
+                  example: US
+                name:
+                  type: string
+                  description: Country name
+                  example: United States
+        vatsim:
+          type: object
+          properties:
+            rating:
+              type: object
+              description: Controller rating
+              properties:
+                id:
+                  type: integer
+                  description: Controller Rating ID
+                  example: 0
+                short:
+                  type: string
+                  pattern: /[A-Z0-9]{2,4}/
+                  description: Short identifier
+                  example: EXMP
+                long:
+                  type: string
+                  description: Human-readable name
+                  example: Example Rating
+            pilotrating:
+              type: object
+              description: Pilot rating
+              properties:
+                id:
+                  type: integer
+                  description: Pilot Rating ID
+                  example: 0
+                short:
+                  type: string
+                  pattern: /[A-Z0-9]{2,4}/
+                  description: Short identifier
+                  example: EXMP
+                long:
+                  type: string
+                  description: Human-readable name
+                  example: Example Rating
+            region:
+              type: object
+              description: Region
+              properties:
+                id:
+                  type: string
+                  description: Region ID
+                  example: AMAS
+                name:
+                  type: string
+                  description: Region name
+                  example: Americas
+            division:
+              type: object
+              description: Division
+              properties:
+                id:
+                  type: string
+                  description: Division ID
+                  example: USA
+                name:
+                  type: string
+                  description: Division name
+                  example: United States
+            subdivision:
+              type: object
+              description: Subdivision
+              properties:
+                id:
+                  type: string
+                  description: Subdivision ID
+                  example: null
+                name:
+                  type: string
+                  description: Subdivision name
+                  example: null
+        oauth:
+          type: object
+          properties:
+            token_valid:
+              type: string
+              description: Whether the access token is valid
+              enum:
+                - 'true'
+                - 'false'

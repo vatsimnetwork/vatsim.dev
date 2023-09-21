@@ -1,0 +1,253 @@
+openapi: 3.1.0
+info:
+  title: VATSIM Events API
+  version: 2.0.0
+  termsOfService: https://vatsim.net/docs/policy/user-agreement
+  contact:
+    email: tech@vatsim.net
+    name: VATSIM Technology Team
+servers:
+  - url: https://my.vatsim.net/api/v2/events
+paths:
+  /latest:
+    get:
+      tags:
+        - Event info
+      summary: List all events
+      description: Returns a list of all current and upcoming events.
+      operationId: listAllEvents
+      responses:
+        '200':
+          $ref: '#/components/responses/ListEventsResponse'
+  /latest/{num}:
+    get:
+      tags:
+        - Event info
+      summary: List events
+      description: Returns a list of the next {num} current and upcoming events.
+      operationId: listEvents
+      parameters:
+        - name: num
+          in: path
+          description: Number of events to return
+          schema:
+            type: integer
+          example: 50
+      responses:
+        '200':
+          $ref: '#/components/responses/ListEventsResponse'
+  /view/{eventId}:
+    get:
+      tags:
+        - Event info
+      summary: Get event by ID
+      description: Returns the event with the specified ID.
+      operationId: getEvent
+      parameters:
+        - name: eventId
+          in: path
+          description: Event ID
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          $ref: '#/components/responses/GetEventResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    description: Status of the request
+                    example: not_found
+                  message:
+                    type: string
+                    description: Error message
+                    example: event could not be found
+  /view/region/{regionId}:
+    get:
+      tags:
+        - Event info
+      summary: List all events by region
+      description: Returns a list of all current and upcoming events in the specified region.
+      operationId: listEventsByRegion
+      parameters:
+        - name: regionId
+          in: path
+          description: Region ID to filter events by
+          schema:
+            type: string
+          example: AMAS
+      responses:
+        '200':
+          $ref: '#/components/responses/ListEventsResponse'
+  /view/division/{divisionId}:
+    get:
+      tags:
+        - Event info
+      summary: List all events by division
+      description: Returns a list of all current and upcoming events in the specified division.
+      operationId: listEventsByDivision
+      parameters:
+        - name: divisionId
+          in: path
+          description: Division ID to filter events by
+          schema:
+            type: string
+          example: USA
+      responses:
+        '200':
+          $ref: '#/components/responses/ListEventsResponse'
+  /export:
+    get:
+      tags:
+        - Event info
+      summary: Export event calendar
+      description: Export calendar of all current and upcoming events
+      operationId: exportEvents
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/calendar:
+              schema:
+                type: string
+                description: iCalendar file
+components:
+  responses:
+    ListEventsResponse:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+    GetEventResponse:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Event'
+    BadRequestResponse:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Error message
+                example: Unable to process the request.
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Event ID
+          example: 1
+        type:
+          type: string
+          description: Event type
+          example: Event
+          enum:
+            - Event
+            - Controller Examination
+            - VASOPS Event
+        name:
+          type: string
+          description: Event name
+          example: Example Event
+        link:
+          type: string
+          description: Event link
+          example: https://my.vatsim.net/events/example-event
+        organisers:
+          type: array
+          description: Event organisers
+          items:
+            $ref: '#/components/schemas/Organiser'
+        airports:
+          type: array
+          description: Event airports
+          items:
+            $ref: '#/components/schemas/Airport'
+        routes:
+          type: array
+          description: Event routes
+          items:
+            $ref: '#/components/schemas/FlightPlan'
+        start_time:
+          type: string
+          format: date-time
+          description: Event start time
+          example: 1970-01-01T00:00:00.000000Z
+        end_time:
+          type: string
+          format: date-time
+          description: Event end time
+          example: 1970-01-01T06:00:00.000000Z
+        short_description:
+          type: string
+          description: Event short description (Markdown)
+          example: Fly with us tonight!
+        description:
+          type: string
+          description: Event description (Markdown)
+          example: Fly with us tonight!
+        banner:
+          type: string
+          description: Event banner
+          example: https://vatsim-my.nyc3.digitaloceanspaces.com/events/JpjoYKp6CRcz4V1wvdlMnQHiAtYOmT2p3DevEA7j.png
+    Airport:
+      type: object
+      properties:
+        icao:
+          type: string
+          description: Airport ICAO code
+          example: KJFK
+    FlightPlan:
+      type: object
+      properties:
+        departure:
+          type: string
+          description: Departure airport ICAO code
+          example: KJFK
+        arrival:
+          type: string
+          description: Arrival airport ICAO code
+          example: KATL
+        route:
+          type: string
+          description: Prescribed route
+          example: RBV Q430 BYRDD J48 MOL FLASK OZZZI1
+    Organiser:
+      type: object
+      properties:
+        region:
+          type: ['string', 'null']
+          description: Region ID
+          example: AMAS
+        division:
+          type: ['string', 'null']
+          description: Division ID
+          example: USA
+        subdivision:
+          type: ['string', 'null']
+          description: Subdivision ID
+          example: null
+        organised_by_vatsim:
+          type: boolean
+          description: Whether the event is organised by VATSIM
+          example: false

@@ -1,0 +1,73 @@
+openapi: 3.1.0
+info:
+  title: VATSIM METAR API
+  version: 2.0.0
+  termsOfService: https://vatsim.net/docs/policy/user-agreement
+  contact:
+    email: tech@vatsim.net
+    name: VATSIM Technology Team
+servers:
+  - url: https://metar.vatsim.net
+paths:
+  /{icao}:
+    get:
+      tags:
+        - METAR
+      summary: Retrieve METARs
+      description: |-
+        Returns the current METARs for the specified airports.
+
+        The ICAO codes must be specified in the path, delimited by commas.
+
+        A special code of `all` can be used to retrieve METARs for all airports.
+
+        A code of three characters or less will be treated as a wildcard,
+        and will return METARs for all airports that start with that prefix.
+      operationId: getMetar
+      parameters:
+        - name: icao
+          in: path
+          description: ICAO code of the airport
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: EGLL
+        - name: format
+          in: query
+          description: 'Format of the response (default: text)'
+          required: false
+          schema:
+            type: string
+            enum:
+              - text
+              - json
+          example: text
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Newline-delimited METARs of the specified airports
+                example: EGLL 010000Z AUTO 23008KT 9999 NCD 18/13 Q1018
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/METAR'
+components:
+  schemas:
+    METAR:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ICAO code of the airport
+          example: EGLL
+        metar:
+          type: string
+          description: METAR of the airport
+          example: 010000Z AUTO 23008KT 9999 NCD 18/13 Q1018
