@@ -18,6 +18,5 @@ request on GitHub!
 
 ## Facility websites
 * ZAB web services - https://github.com/zabartcc (Node.js)
-* ZDC website - https://github.com/vzdc/vzdcwebsite (PHP/Laravel)
 * Control Center (training management system) - https://github.com/Vatsim-Scandinavia/controlcenter (PHP/Laravel)
 * CZQO website - https://github.com/czqoocavatsim/web (PHP/Laravel)
