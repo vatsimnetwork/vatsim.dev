@@ -7,6 +7,17 @@
  * The first version in the list is the default version.
  */
 const apis = {
+  aip: {
+    slug: 'aip-api',
+    title: 'AIP API',
+    versions: [
+      {
+        version: '1.0.0',
+        label: 'v1',
+        spec: 'openapi/aip.yaml',
+      },
+    ],
+  },
   connect: {
     slug: 'connect-api',
     title: 'Connect API',

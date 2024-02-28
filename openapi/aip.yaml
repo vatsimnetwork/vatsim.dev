@@ -1,0 +1,148 @@
+openapi: 3.1.0
+info:
+  title: VATSIM AIP API
+  version: 2.0.0
+  termsOfService: https://vatsim.net/docs/policy/user-agreement
+  contact:
+    email: tech@vatsim.net
+    name: VATSIM Technology Team
+servers:
+  - url: https://my.vatsim.net/api/v2/aip
+paths:
+  /airports/{icao}:
+    get:
+      tags:
+        - Airport info
+      summary: Get airport by ICAO
+      description: Returns the airport with the specified ICAO.
+      operationId: getAirport
+      parameters:
+        - name: icao
+          in: path
+          description: Airport ICAO
+          schema:
+            type: string
+          example: KJFK
+          required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/GetAirportResponse'
+  /airports/{icao}/stations:
+    get:
+      tags:
+        - Airport info
+      summary: List all stations for the airport
+      description: Returns a list of all stations for the specified airport.
+      operationId: listAirportStations
+      parameters:
+        - name: icao
+          in: path
+          description: Airport ICAO
+          schema:
+            type: string
+          example: KJFK
+          required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/ListAirportStationsResponse'
+components:
+  responses:
+    ListAirportStationsResponse:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+    GetAirportResponse:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Airport'
+    BadRequestResponse:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Error message
+                example: Unable to process the request.
+  schemas:
+    Airport:
+      type: object
+      properties:
+        icao:
+          type: string
+          description: Airport ICAO code
+          example: KJFK
+          required: true
+        iata:
+          type: string
+          description: Airport IATA code
+          example: KJFK
+        name:
+          type: string
+          description: Airport name
+          example: John F Kennedy International Airport
+        altitude_m:
+          type: integer
+          description: Airport altitude in meters
+          example: 3
+        altitude_ft:
+          type: integer
+          description: Airport altitude in feet
+          example: 13
+        transition_alt:
+          type: integer
+          description: Airport transition altitude
+          example: 18000
+        transition_level:
+          type: string
+          description: Airport transition level. If transition_level_by_atc is true, "Assigned by ATC" is returned
+          example: FL180
+        transition_level_by_atc:
+          type: boolean
+          description: True if transition level is assigned by ATC, false otherwise
+          example: false
+        city:
+          type: string
+          description: Airport city name
+          example: New York
+        country:
+          type: string
+          description: Airport country name
+          example: United States
+        division_id:
+          type: string
+          description: Division responsible for the airport
+          example: USA
+    Station:
+      type: object
+      properties:
+        callsign:
+          type: string
+          description: Station callsign
+          example: JFK_TWR
+        name:
+          type: string
+          description: Station name
+          example: Kennedy Tower
+        frequency:
+          type: string
+          description: Station frequency
+          example: 119.100
+        ctaf:
+          type: boolean
+          description: True if the frequency should be used as CTAF when no ATC is online, false otherwise
+          example: true
