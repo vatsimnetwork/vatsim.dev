@@ -105,7 +105,7 @@ components:
         iata:
           type: string
           description: Airport IATA code
-          example: KJFK
+          example: JFK
         name:
           type: string
           description: Airport name
@@ -142,6 +142,10 @@ components:
           type: string
           description: Division responsible for the airport
           example: USA
+        stations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Station'
     Station:
       type: object
       properties:
