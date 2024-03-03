@@ -27,6 +27,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/GetAirportResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
   /airports/{icao}/stations:
     get:
       tags:
@@ -45,6 +47,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/ListAirportStationsResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
 components:
   responses:
     ListAirportStationsResponse:
@@ -67,6 +71,17 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/Airport'
+    NotFoundResponse:
+      description: Resource Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Message response
+                example: airport could not be found
     BadRequestResponse:
       description: Bad request
       content:
@@ -90,7 +105,7 @@ components:
         iata:
           type: string
           description: Airport IATA code
-          example: KJFK
+          example: JFK
         name:
           type: string
           description: Airport name
@@ -127,6 +142,10 @@ components:
           type: string
           description: Division responsible for the airport
           example: USA
+        stations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Station'
     Station:
       type: object
       properties:
