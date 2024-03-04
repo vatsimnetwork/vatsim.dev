@@ -111,8 +111,8 @@ The `action` field describes what kind of webhook is being emitted. Below is a l
 
 | Action                  | `resource` Field                         | Function                        |
 |-------------------------|------------------------------------------|---------------------------------|
-| `member_created_action` | [`Member.id`](../models/member#memberid) | Emitted when a user is created  |
-| `member_changed_action` | [`Member.id`](../models/member#memberid) | Emitted when a user is modified |
+| `member_created_action` | `Member.id`| Emitted when a user is created  |
+| `member_changed_action` | `Member.id` | Emitted when a user is modified |
 
 More webhooks will be added throughout various testing phases to facilitate GDPR deletion requests, events, and oter necessary functionality.
 
