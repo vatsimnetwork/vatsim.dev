@@ -12,6 +12,7 @@ request on GitHub!
 * [WordPress plugin](https://gitlab.com/jamiejanssen/wp-plugin-vatsim-connect-public)
 * [Moodle configuration](https://forums.vatsim.net/topic/29211-preview-vatsim-connect-for-moodle/)
 * VATSIM's Django apps use [Python Social Auth](https://python-social-auth.readthedocs.io/en/latest/)
+* [django-allauth OAuth2 provider](https://github.com/robin24/django-allauth-vatsim)
 
 ## Libraries
 * Vatsimphp - https://github.com/skymeyer/Vatsimphp (PHP)
